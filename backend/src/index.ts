@@ -1,26 +1,19 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import routeRoutes from './routes/routes';
+import app from './app';
+import { initializeDatabase } from './utils/db';
 
-dotenv.config();
+const PORT = Number(process.env.PORT || 5000);
 
-const app = express();
-app.use(cors());
+const start = async () => {
+  try {
+    await initializeDatabase();
+    console.log('Database schema initialized');
+  } catch (error) {
+    console.error('Database initialization failed. API will still start.', error);
+  }
 
-import path from 'path';
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+  app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+  });
+};
 
-app.use('/api/auth', authRoutes);
-app.use('/api/routes', routeRoutes);
-
-app.get('/', (req, res) => {
-  res.send('Route Finder API is running');
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-});
+void start();
