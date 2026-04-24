@@ -80,9 +80,19 @@ npm install
 .\start-all.ps1 -SkipInstall
 ```
 
+Остановить backend + frontend одной командой:
+```powershell
+.\stop-all.ps1
+```
+
 Если PowerShell блокирует скрипт (`ExecutionPolicy`):
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start-all.ps1
+```
+
+Для остановки при `ExecutionPolicy`:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\stop-all.ps1
 ```
 
 Что делает `start-all.ps1`:
@@ -193,3 +203,4 @@ taskkill /PID <PID> /F
 - `backend/` — API и работа с БД
 - `frontend/` — UI и карта
 - `start-all.ps1` — запуск всего проекта одной командой
+- `stop-all.ps1` — остановка backend/frontend одной командой
