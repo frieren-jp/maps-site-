@@ -1,62 +1,62 @@
-# Route Finder (React + Express + PostgreSQL)
+# Route Finder (OpenStreetMap + React + Express + PostgreSQL)
 
-Web app for searching places/routes, publishing custom multi-point routes, rating and commenting.
+Проект для поиска и публикации маршрутов с несколькими точками, комментариями, рейтингом и фото.
 
-## Stack
-- Frontend: React, TypeScript, Vite, React Router, styled-components
+## 1. Стек
+
+- Frontend: React, TypeScript, Vite, styled-components, Leaflet
 - Backend: Node.js, Express, TypeScript, PostgreSQL
-- Auth: JWT + local test account `admin/admin`
-- Maps: OpenStreetMap (Leaflet) + free public OSRM routing
-- Tests: Vitest (frontend), Jest (backend)
+- Auth: JWT + тестовый вход `admin/admin`
+- Карта и роутинг: OpenStreetMap + OSRM (бесплатно)
 
-## Features
-- Home page, auth page, routes list page, route details page
-- Route creation with multiple points (A -> B + waypoints)
-- Route rendering on OpenStreetMap
-- Route photos upload
-- Ratings and comments
-- Search + sorting
-- Responsive UI (desktop / tablet / mobile)
-- Offline fallback mode in frontend:
-  if backend is unavailable, `admin/admin` still works and routes are saved in `localStorage`
+## 2. Что нужно установить
 
-## Environment
+1. Node.js (рекомендуется LTS 20+)
+2. npm
+3. PostgreSQL (желательно) + pgAdmin
 
-### Backend `.env`
-Create `backend/.env` from `backend/.env.example`:
+Проверка:
+```bash
+node -v
+npm -v
+```
+
+## 3. Настройка `.env`
+
+### Backend (`backend/.env`)
+
+Скопируй из `backend/.env.example` и проверь:
 
 ```env
 PORT=5000
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=replace_with_random_secret
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
-### Frontend `.env`
-Create `frontend/.env` from `frontend/.env.example`:
+Сгенерировать безопасный `JWT_SECRET`:
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+### Frontend (`frontend/.env`)
+
+Скопируй из `frontend/.env.example`:
 
 ```env
 VITE_API_URL=http://localhost:5000
 VITE_OSRM_API_URL=https://router.project-osrm.org
 ```
 
-## Database setup (pgAdmin)
-1. Start PostgreSQL.
-2. Open your DB in pgAdmin.
-3. Run SQL from [backend/src/db.sql](/C:/Users/freezemyself/Desktop/project/backend/src/db.sql).
+## 4. Настройка базы данных (рекомендуется)
 
-Note: backend also auto-creates required tables at startup, but running SQL manually is recommended.
+1. Запусти PostgreSQL.
+2. Открой базу в pgAdmin.
+3. Выполни SQL из файла [backend/src/db.sql](/C:/Users/freezemyself/Desktop/project/backend/src/db.sql).
 
-## Free map/routing setup
-No paid key is required.
+Примечание: backend умеет fallback-режим при проблемах с БД, но для нормального хранения данных PostgreSQL должен работать.
 
-The project uses:
-1. OpenStreetMap tiles (via Leaflet).
-2. Public OSRM endpoint for road routing (`VITE_OSRM_API_URL`).
-
-If OSRM is temporarily unavailable, the app still draws the route as a direct polyline between your points.
-
-## Install
+## 5. Установка зависимостей
 
 ```bash
 cd backend
@@ -66,25 +66,55 @@ cd ../frontend
 npm install
 ```
 
-## Run
+## 6. Запуск проекта
 
-Terminal 1:
+### Вариант A: одной командой (рекомендуется)
+
+Из корня проекта:
+```powershell
+.\start-all.ps1
+```
+
+Быстрый запуск без проверки/установки зависимостей:
+```powershell
+.\start-all.ps1 -SkipInstall
+```
+
+Если PowerShell блокирует скрипт (`ExecutionPolicy`):
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-all.ps1
+```
+
+Что делает `start-all.ps1`:
+1. Создает `.env` из `.env.example`, если файла нет.
+2. Ставит зависимости (если нет `node_modules`).
+3. Открывает 2 окна: backend и frontend.
+
+### Вариант B: вручную в 2 терминалах
+
+Терминал 1:
 ```bash
 cd backend
 npm run dev
 ```
 
-Terminal 2:
+Терминал 2:
 ```bash
 cd frontend
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Open:
-- Frontend: [http://localhost:5173](http://localhost:5173)
+## 7. Проверка, что все работает
+
+- Frontend: [http://127.0.0.1:5173](http://127.0.0.1:5173)
 - Backend health: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
-## Test
+## 8. Тестовый вход
+
+- login: `admin`
+- password: `admin`
+
+## 9. Тесты
 
 Backend:
 ```bash
@@ -98,8 +128,68 @@ cd frontend
 npm test
 ```
 
-## Default test account
-- login: `admin`
-- password: `admin`
+## 10. Ошибки и решения
 
-This account works for quick testing. In frontend it can also be used when backend is unavailable.
+### Ошибка `EADDRINUSE` (порт занят)
+
+Проверить:
+```bash
+netstat -ano | findstr :5000
+netstat -ano | findstr :5173
+```
+
+Завершить процесс:
+```bash
+taskkill /PID <PID> /F
+```
+
+### Frontend не открывается
+
+1. Проверь, что frontend-процесс запущен.
+2. Открой `http://127.0.0.1:5173`.
+3. Проверь, что порт 5173 свободен.
+
+### Backend не стартует из-за БД
+
+1. Убедись, что PostgreSQL запущен.
+2. Проверь `DATABASE_URL` в `backend/.env`.
+3. Проверь доступ к базе через pgAdmin.
+4. Повторно выполни `backend/src/db.sql`.
+
+### Ошибка авторизации/token
+
+1. Убедись, что в `backend/.env` есть непустой `JWT_SECRET`.
+2. После изменения `JWT_SECRET` перезапусти backend.
+
+### Ошибка установки npm-пакетов
+
+В проблемной папке:
+```powershell
+Remove-Item -Recurse -Force node_modules, package-lock.json
+npm install
+```
+
+### Карта есть, маршрут по дорогам не строится
+
+Это обычно временная недоступность OSRM endpoint.  
+Приложение автоматически рисует маршрут прямой линией по точкам (fallback).
+
+## 11. Полезные команды
+
+Остановить backend по порту:
+```bash
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
+```
+
+Остановить frontend по порту:
+```bash
+netstat -ano | findstr :5173
+taskkill /PID <PID> /F
+```
+
+## 12. Структура проекта
+
+- `backend/` — API и работа с БД
+- `frontend/` — UI и карта
+- `start-all.ps1` — запуск всего проекта одной командой
